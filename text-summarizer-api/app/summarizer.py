@@ -1,3 +1,4 @@
+import json
 import httpx
 from .settings import settings
 
@@ -10,17 +11,17 @@ def _get_client() -> httpx.AsyncClient:
     return _httpx_client
 
 async def _summarize_workers(text: str, min_length: int, max_length: int) -> str:
-    url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ACCOUNT_ID}/workers/summarize"
+    url = f"{settings.WORKER_URL}/summarize"
     headers = {
-        "Authorization": f"Bearer {settings.CF_API_TOKEN}",
+        "Authorization": f"Bearer {settings.CF_API_TOKEN}",  # si tu Worker lo exige
         "Content-Type": "application/json",
     }
-    resp = await _get_client().post(
-        url,
-        json={"text": text, "min_length": min_length, "max_length": max_length},
-    )
+    payload = {"text": text, "min_length": min_length, "max_length": max_length}
+    client = _get_client()
+    resp = await client.post(url, json=payload, headers=headers)
     resp.raise_for_status()
-    return resp.json().get("summary", "")
+    data = resp.json()
+    return data.get("summary", "")
 
 async def _summarize_rapidapi(text: str, min_length: int, max_length: int) -> str:
     if not settings.RAPIDAPI_KEY or not settings.RAPIDAPI_HOST:
@@ -31,12 +32,12 @@ async def _summarize_rapidapi(text: str, min_length: int, max_length: int) -> st
         "X-RapidAPI-Host": settings.RAPIDAPI_HOST,
         "Content-Type": "application/json",
     }
-    resp = await _get_client().post(
-        url,
-        json={"text": text, "min_length": min_length, "max_length": max_length},
-    )
+    payload = {"text": text, "min_length": min_length, "max_length": max_length}
+    client = _get_client()
+    resp = await client.post(url, json=payload, headers=headers)
     resp.raise_for_status()
-    return resp.json().get("summary", "")
+    data = resp.json()
+    return data.get("summary", "")
 
 async def summarize(text: str, min_length: int, max_length: int) -> str:
     if settings.BACKEND == "workers":
