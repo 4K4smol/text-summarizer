@@ -1,23 +1,15 @@
 FROM python:3.11-slim
 
-ARG BACKEND=workers          # valor por defecto en Render
-ENV BACKEND=${BACKEND}
+WORKDIR /app
+COPY requirements-workers.txt .
+RUN pip install --no-cache-dir -r requirements-workers.txt
+
+COPY . .
+
+# En Render Free trabaja en 512 MB, solo backends I/O-bound
+ENV BACKEND=workers
 ENV PORT=8080
 
-# solo aplica si BACKEND=hf, pero no estorba en workers
-ENV HF_HOME=/models
+EXPOSE 8080
 
-WORKDIR /code
-
-# Copiamos ambos requirements
-COPY requirements*.txt ./
-
-# Instalamos el que corresponda
-RUN if [ "$BACKEND" = "hf" ]; \
-      then pip install --no-cache-dir -r requirements.txt ; \
-      else pip install --no-cache-dir -r requirements-workers.txt ; \
-    fi
-
-COPY app/ app/
-
-CMD ["uvicorn", "app.main:api", "--host", "0.0.0.0", "--port", "8080", "--workers", "2"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "2"]
