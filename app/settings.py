@@ -1,4 +1,6 @@
-from pydantic import BaseSettings, Field
+# app/settings.py
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 class Settings(BaseSettings):
     BACKEND: str = Field("workers", env="BACKEND")
