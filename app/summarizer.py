@@ -1,11 +1,13 @@
 import asyncio, httpx
 from functools import lru_cache
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 from .settings import settings
 
 
 @lru_cache(maxsize=1)
 def _load_local_pipeline():
+    # 🚨 Importar transformers SOLO cuando hace falta
+    from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+
     model = AutoModelForSeq2SeqLM.from_pretrained(settings.HF_MODEL)
     tok = AutoTokenizer.from_pretrained(settings.HF_MODEL)
     return pipeline("summarization", model=model, tokenizer=tok)
